@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Solo los usuarios cuyo email figura como documento en la colección "admins" pueden leer y escribir.
+    function esAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.token.email));
+    }
+    match /jugadores/{id} { allow read, write: if esAdmin(); }
+    match /partidos/{id}  { allow read, write: if esAdmin(); }
+    match /config/{id}    { allow read, write: if esAdmin(); }
+    // La auditoría solo se puede leer y agregar: nadie puede modificar ni borrar movimientos.
+    match /auditoria/{id} { allow read, create: if esAdmin(); allow update, delete: if false; }
+    match /admins/{email} {
+      allow read: if request.auth != null && request.auth.token.email == email;
+      allow write: if false; // los administradores se cargan desde la consola de Firebase
+    }
+  }
+}

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fútbol de los viernes</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="login" class="login hidden">
+  <form id="loginForm" class="card">
+    <h1>⚽ Fútbol de los viernes</h1>
+    <label>Email <input type="email" id="loginEmail" required autocomplete="username"></label>
+    <label>Contraseña <input type="password" id="loginPass" required autocomplete="current-password"></label>
+    <p id="loginError" class="error"></p>
+    <button class="btn primary">Ingresar</button>
+  </form>
+</div>
+
+<div id="app" class="hidden">
+  <header>
+    <div class="brand">
+      <h1>⚽ Fútbol de los viernes</h1>
+      <div id="headInfo" class="head-info"></div>
+    </div>
+    <nav>
+      <button data-tab="jugadores" class="active">Jugadores</button>
+      <button data-tab="armar">Armar partido</button>
+      <button data-tab="historial">Historial</button>
+      <button data-tab="config">Configuración</button>
+      <button data-tab="auditoria">Auditoría</button>
+    </nav>
+    <div class="user">
+      <span id="modeBadge" class="badge"></span>
+      <button id="logoutBtn" class="btn small hidden">Salir</button>
+    </div>
+  </header>
+
+  <main>
+    <section id="tab-jugadores">
+      <div class="bar">
+        <h2>Jugadores <span id="playersCount" class="muted"></span></h2>
+        <div>
+          <button id="seedBtn" class="btn hidden">Cargar jugadores de ejemplo</button>
+          <button id="addPlayerBtn" class="btn primary">+ Nuevo jugador</button>
+        </div>
+      </div>
+      <div id="playersGrid" class="grid"></div>
+    </section>
+
+    <section id="tab-armar" class="hidden">
+      <div class="bar">
+        <h2>Armar partido</h2>
+        <label class="inline">Fecha <input type="date" id="fecha"></label>
+      </div>
+      <div class="bar">
+        <p class="muted">Tildá los 10 jugadores que juegan ese día.</p>
+        <div>
+          <button type="button" id="selAllBtn" class="btn small">Seleccionar todos</button>
+          <button type="button" id="selNoneBtn" class="btn small">Deseleccionar todos</button>
+        </div>
+      </div>
+      <div id="selectGrid" class="select-grid"></div>
+      <div class="bar">
+        <strong id="selCount">0 / 10 seleccionados</strong>
+        <button id="generateBtn" class="btn primary" disabled>Armar equipos</button>
+      </div>
+
+      <div id="fieldWrap" class="hidden">
+        <div class="bar">
+          <div class="opts">
+            <button data-opt="0" class="active">Opción principal</button>
+            <button data-opt="1">Segunda opción</button>
+          </div>
+          <button id="saveMatchBtn" class="btn primary">Guardar partido</button>
+        </div>
+        <div id="summary" class="summary"></div>
+        <div class="pitch-row">
+          <div id="pitch" class="pitch">
+            <div class="line mid"></div><div class="circle"></div>
+            <div class="area left"></div><div class="area right"></div>
+          </div>
+          <button type="button" id="clearMatchBtn" class="btn danger">Borrar equipos</button>
+        </div>
+        <p class="muted">Para cambiar un jugador, arrastralo y soltalo encima de otro: intercambian lugar y equipo. Se guarda la opción que estés viendo como la elegida.</p>
+      </div>
+    </section>
+
+    <section id="tab-historial" class="hidden">
+      <div class="bar"><h2>Historial de partidos</h2></div>
+      <div id="historyList"></div>
+    </section>
+    <section id="tab-config" class="hidden">
+      <div class="bar"><h2>Configuración</h2></div>
+      <form id="configForm" class="card wide">
+        <label>Sede actual <input id="cSede" maxlength="60" placeholder="Nombre de la cancha"></label>
+        <div class="two">
+          <label>Día <select id="cDia"></select></label>
+          <label>Horario <input type="time" id="cHora"></label>
+        </div>
+        <button class="btn primary">Guardar configuración</button>
+      </form>
+    </section>
+
+    <section id="tab-auditoria" class="hidden">
+      <div class="bar"><h2>Auditoría de movimientos <span id="auditCount" class="muted"></span></h2></div>
+      <div id="auditList"></div>
+    </section>
+  </main>
+
+  <footer>
+    <span></span>
+    <span class="credit">Futbol IA - Creado por el Chimi y el Pacho</span>
+    <span id="version" class="version"></span>
+  </footer>
+</div>
+
+<dialog id="playerDialog">
+  <form id="playerForm" method="dialog">
+    <h2 id="playerDialogTitle">Nuevo jugador</h2>
+    <div class="photo-row">
+      <div id="photoPreview" class="avatar big"></div>
+      <div>
+        <label class="btn small">Cambiar foto<input type="file" id="photoInput" accept="image/*" hidden></label>
+        <button type="button" id="photoRemove" class="btn small">Quitar</button>
+      </div>
+    </div>
+    <label>Nombre <input id="pNombre" required maxlength="30"></label>
+    <div class="two">
+      <label>Puesto principal <select id="pPuesto1"></select></label>
+      <label>Segundo puesto <select id="pPuesto2"></select></label>
+    </div>
+    <div id="statsInputs" class="stats-inputs"></div>
+    <div class="actions">
+      <button type="button" id="playerCancel" class="btn">Cancelar</button>
+      <button class="btn primary" value="ok">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="askDialog" class="ask">
+  <form method="dialog">
+    <p id="askMsg"></p>
+    <div class="actions">
+      <button class="btn" value="no">Cancelar</button>
+      <button class="btn primary" value="si">Sí</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="hoverCard" class="pcard hover-card hidden"></div>
+<div id="toast" class="toast hidden"></div>
+
+<script src="version.js"></script>
+<script src="firebase-config.js"></script>
+<script src="db.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
