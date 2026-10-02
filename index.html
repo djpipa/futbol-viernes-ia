@@ -57,6 +57,7 @@
           <button id="addPlayerBtn" class="btn primary">+ Nuevo jugador</button>
         </div>
       </div>
+      <input type="search" id="playerSearch" class="search" placeholder="Buscar jugador por nombre, puesto o etiqueta..." aria-label="Buscar jugador">
       <div id="playersGrid" class="grid"></div>
     </section>
 
@@ -105,7 +106,12 @@
     </section>
 
     <section id="tab-historial" class="hidden">
-      <div class="bar"><h2>Historial de partidos</h2></div>
+      <div class="bar"><h2>Historial de partidos <span id="historyCount" class="muted"></span></h2></div>
+      <div class="search-row">
+        <label class="inline">Desde <input type="date" id="histDesde"></label>
+        <label class="inline">Hasta <input type="date" id="histHasta"></label>
+        <button type="button" id="histClear" class="btn small">Limpiar</button>
+      </div>
       <div id="historyList"></div>
     </section>
     <section id="tab-config" class="hidden">
@@ -122,13 +128,14 @@
 
     <section id="tab-auditoria" class="hidden">
       <div class="bar"><h2>Auditoría de movimientos <span id="auditCount" class="muted"></span></h2></div>
+      <input type="search" id="auditSearch" class="search" placeholder="Buscar en la auditoría: jugador, acción, detalle, usuario o fecha..." aria-label="Buscar en la auditoría">
       <div id="auditList"></div>
     </section>
   </main>
 
   <footer>
     <span></span>
-    <span class="credit">Futbol IA - Creado por el Chimi y el Pacho</span>
+    <span class="credit">Futbol Viernes IA - Creado por el Chimi y el Pacho con ClaudeAI - 2026/2027</span>
     <span id="version" class="version"></span>
   </footer>
 </div>

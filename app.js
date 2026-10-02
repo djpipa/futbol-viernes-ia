@@ -134,16 +134,22 @@
     if ((antes.foto || '') !== (despues.foto || '')) out.push(despues.foto ? 'foto cambiada' : 'foto quitada');
     return out.join(' · ') || 'sin cambios';
   }
+  // Búsqueda sin distinguir mayúsculas ni acentos
+  const norm = s => String(s ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  const fmtTs = ts => new Date(ts).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'medium' });
+
   function renderAudit() {
-    const list = [...state.audit].sort((a, b) => b.ts.localeCompare(a.ts));
+    const all = [...state.audit].sort((a, b) => b.ts.localeCompare(a.ts));
+    const q = norm($('#auditSearch').value);
+    const list = q ? all.filter(a => norm([fmtTs(a.ts), a.accion, a.jugador, a.detalle, a.usuario].join(' ')).includes(q)) : all;
     const cls = { Alta: 'alta', 'Edición': 'edicion', Baja: 'baja' };
-    $('#auditCount').textContent = `(${list.length})`;
+    $('#auditCount').textContent = q ? `(${list.length} de ${all.length})` : `(${all.length})`;
     $('#auditList').innerHTML = list.length ? list.map(a => `
       <div class="audit ${cls[a.accion] || ''}">
-        <span>${new Date(a.ts).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'medium' })}</span>
+        <span>${fmtTs(a.ts)}</span>
         <span class="tag">${esc(a.accion)}</span>
         <span><b>${esc(a.jugador)}</b>${a.detalle ? ` — ${esc(a.detalle)}` : ''}<small>${esc(a.usuario)}</small></span>
-      </div>`).join('') : '<div class="empty">Todavía no hay movimientos registrados.</div>';
+      </div>`).join('') : `<div class="empty">${q ? 'Ningún movimiento coincide con la búsqueda.' : 'Todavía no hay movimientos registrados.'}</div>`;
   }
 
   // ---------- Configuración ----------
@@ -189,17 +195,19 @@
   }
 
   function renderPlayers() {
-    const list = [...state.players].sort((a, b) => a.nombre.localeCompare(b.nombre));
-    $('#playersCount').textContent = `(${list.length})`;
-    $('#seedBtn').classList.toggle('hidden', list.length >= 10);
-    $('#seedBtn').textContent = `Cargar ${10 - list.length} jugadores de prueba`;
+    const all = [...state.players].sort((a, b) => a.nombre.localeCompare(b.nombre));
+    const q = norm($('#playerSearch').value);
+    const list = q ? all.filter(p => norm([p.nombre, POS[p.puesto1], p.puesto2 ? POS[p.puesto2] : '', ...(p.etiquetas || [])].join(' ')).includes(q)) : all;
+    $('#playersCount').textContent = q ? `(${list.length} de ${all.length})` : `(${all.length})`;
+    $('#seedBtn').classList.toggle('hidden', all.length >= 10);
+    $('#seedBtn').textContent = `Cargar ${10 - all.length} jugadores de prueba`;
     $('#playersGrid').innerHTML = list.length ? list.map(p => `
       <div class="pcard">${fichaHTML(p)}
         <div class="actions">
           <button class="btn small" data-edit="${p.id}">Editar</button>
           <button class="btn small danger" data-del="${p.id}">Eliminar</button>
         </div>
-      </div>`).join('') : '<div class="empty">Todavía no hay jugadores cargados.</div>';
+      </div>`).join('') : `<div class="empty">${q ? 'Ningún jugador coincide con la búsqueda.' : 'Todavía no hay jugadores cargados.'}</div>`;
     renderSelect();
   }
 
@@ -381,7 +389,10 @@
   const fmtFecha = f => new Date(f + 'T12:00:00').toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   function renderHistory() {
-    const list = [...state.matches].sort((a, b) => b.fecha.localeCompare(a.fecha));
+    const all = [...state.matches].sort((a, b) => b.fecha.localeCompare(a.fecha));
+    const desde = $('#histDesde').value, hasta = $('#histHasta').value, q = desde || hasta;
+    const list = all.filter(m => (!desde || m.fecha >= desde) && (!hasta || m.fecha <= hasta));
+    $('#historyCount').textContent = q ? `(${list.length} de ${all.length})` : `(${all.length})`;
     $('#historyList').innerHTML = list.length ? list.map(m => {
       const tk = m.opciones[m.elegida || 0].tokens;
       const names = t => tk.filter(x => x.team === t).map(x => `${esc((playerById(x.pid) || x).nombre)} <span class="muted">${x.role}</span>`).join('<br>');
@@ -389,7 +400,7 @@
         <div class="teams"><div class="a"><b>Equipo ${TEAMS[0]}</b><br>${names(0)}</div><div class="b"><b>Equipo ${TEAMS[1]}</b><br>${names(1)}</div></div>
         <button class="btn small" data-open="${m.id}">Ver / editar en cancha</button>
         <button class="btn small danger" data-delmatch="${m.id}">Eliminar</button></div>`;
-    }).join('') : '<div class="empty">Todavía no hay partidos guardados.</div>';
+    }).join('') : `<div class="empty">${q ? 'No hay partidos entre esas fechas.' : 'Todavía no hay partidos guardados.'}</div>`;
   }
 
   function openMatch(id) {
@@ -471,6 +482,10 @@
       $('#fieldWrap').scrollIntoView({ behavior: 'smooth' });
     };
     $$('.opts button').forEach(b => b.onclick = () => { state.opt = Number(b.dataset.opt); renderField(); });
+    $('#playerSearch').oninput = renderPlayers;
+    $('#auditSearch').oninput = renderAudit;
+    $('#histDesde').onchange = $('#histHasta').onchange = renderHistory;
+    $('#histClear').onclick = () => { $('#histDesde').value = $('#histHasta').value = ''; renderHistory(); };
     $('#saveMatchBtn').onclick = saveMatch;
     $('#clearMatchBtn').onclick = async () => {
       if (!await ask('¿Borrar los equipos armados y arrancar de cero?')) return;
