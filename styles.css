@@ -178,3 +178,9 @@ dialog.ask p { margin:0 0 6px; font-size:1.05rem; }
 .ptable td.acts { text-align:right; }
 .ptable td.acts .btn { margin-left:4px; }
 @media (max-width:640px) { .players-tools { flex-wrap:wrap; } .players-tools .search { flex-basis:100%; } }
+.icon-btn { display:inline-grid; place-items:center; width:30px; height:30px; padding:0; margin-left:2px; background:none; border:0; border-radius:8px; color:var(--muted); cursor:pointer; vertical-align:middle; }
+.icon-btn svg { pointer-events:none; }
+.icon-btn:hover { background:var(--bg); color:var(--accent); }
+.icon-btn.danger:hover { color:var(--rojo); }
+.icon-btn:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
+.ptable td.acts { width:1%; padding-left:4px; }

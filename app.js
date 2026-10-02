@@ -198,6 +198,11 @@
   const COLS = [['nombre', 'Jugador', 'txt'], ['puesto1', 'PP', 'txt'], ['puesto2', 'PS', 'txt'], ['general', 'GEN', 'num'],
                 ...STATS.map(([k, n, ab]) => [k, ab, 'num', n])];
   const valor = (p, k) => k === 'general' ? overall(p) : k === 'nombre' ? p.nombre : k.startsWith('puesto') ? (p[k] ? POS[p[k]] : '') : Number(p[k] ?? STAT_DEF);
+  const svg = d => `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const ICONO = {
+    lapiz: svg('<path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/>'),
+    tacho: svg('<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/>')
+  };
   function tablaHTML(list) {
     const { key, dir } = state.sort, tipo = (COLS.find(c => c[0] === key) || [])[2];
     const rows = [...list].sort((a, b) => {
@@ -212,7 +217,7 @@
       <tr><td class="who">${avatar(p)}<b>${esc(p.nombre)}</b></td><td>${POS[p.puesto1]}</td><td>${p.puesto2 ? POS[p.puesto2] : '—'}</td>
         <td class="num gen">${overall(p)}</td>${STATS.map(([k]) => `<td class="num">${p[k] ?? STAT_DEF}</td>`).join('')}
         <td class="tags-cell">${(p.etiquetas || []).map(t => `<span class="tag-pill">${esc(t)}</span>`).join('')}</td>
-        <td class="acts"><button class="btn small" data-edit="${p.id}">Editar</button><button class="btn small danger" data-del="${p.id}">Eliminar</button></td></tr>`).join('')}
+        <td class="acts"><button class="icon-btn" data-edit="${p.id}" title="Editar" aria-label="Editar a ${esc(p.nombre)}">${ICONO.lapiz}</button><button class="icon-btn danger" data-del="${p.id}" title="Eliminar" aria-label="Eliminar a ${esc(p.nombre)}">${ICONO.tacho}</button></td></tr>`).join('')}
       </tbody></table></div>`;
   }
 
@@ -487,7 +492,7 @@
         state.sort = state.sort.key === k ? { key: k, dir: -state.sort.dir } : { key: k, dir: num ? -1 : 1 };
         return renderPlayers();
       }
-      const ed = e.target.dataset.edit, del = e.target.dataset.del;
+      const btn = e.target.closest('[data-edit],[data-del]') || {}, ed = (btn.dataset || {}).edit, del = (btn.dataset || {}).del;
       if (ed) openPlayer(playerById(ed));
       if (del && confirm(`¿Eliminar a ${playerById(del).nombre}?`)) guard(async () => { const n = playerById(del).nombre; await DB.remove('jugadores', del); await audit('Baja', n); await reload(); });
     };
