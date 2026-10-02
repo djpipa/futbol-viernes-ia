@@ -136,3 +136,9 @@ dialog.ask p { margin:0 0 6px; font-size:1.05rem; }
 .pass-eye .slash { display:none; }
 .pass-eye[aria-pressed="true"] { color:var(--accent); }
 .pass-eye[aria-pressed="true"] .slash { display:inline; }
+.tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+.tags + .stats { margin-top:10px; }
+.tag-pill { font-size:.75rem; font-weight:600; line-height:1; padding:5px 10px; border-radius:99px; color:var(--accent); background:#34c26b1f; border:1px solid #34c26b55; white-space:nowrap; }
+.tags-label { margin:4px 0 6px; }
+.tags-inputs { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+.tags-inputs input { border-radius:99px; padding:7px 14px; }

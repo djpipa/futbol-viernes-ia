@@ -120,6 +120,8 @@
     if (antes.puesto1 !== despues.puesto1) out.push(`puesto principal: ${antes.puesto1} → ${despues.puesto1}`);
     if ((antes.puesto2 || '') !== (despues.puesto2 || '')) out.push(`segundo puesto: ${antes.puesto2 || 'ninguno'} → ${despues.puesto2 || 'ninguno'}`);
     STATS.forEach(([k, n]) => { if (Number(antes[k]) !== Number(despues[k])) out.push(`${n.toLowerCase()}: ${antes[k]} → ${despues[k]}`); });
+    const et = a => (a.etiquetas || []).join(', ') || 'ninguna';
+    if (et(antes) !== et(despues)) out.push(`etiquetas: ${et(antes)} → ${et(despues)}`);
     if ((antes.foto || '') !== (despues.foto || '')) out.push(despues.foto ? 'foto cambiada' : 'foto quitada');
     return out.join(' · ') || 'sin cambios';
   }
@@ -156,6 +158,7 @@
           <div><h3>${esc(p.nombre)}</h3><span class="muted">PP: ${POS[p.puesto1]}<br>PS: ${p.puesto2 ? POS[p.puesto2] : '—'}</span></div>
           <div class="ovr">${overall(p)}</div>
         </div>
+        ${(p.etiquetas || []).length ? `<div class="tags">${p.etiquetas.map(t => `<span class="tag-pill">${esc(t)}</span>`).join('')}</div>` : ''}
         <div class="stats">${STATS.map(([k, , ab]) => `<div>${ab}<b>${p[k]}</b></div>`).join('')}</div>`;
 
   // Ficha flotante al pasar el mouse por un jugador en Armar partido
@@ -199,6 +202,7 @@
     $('#pPuesto1').value = p ? p.puesto1 : 'DEF';
     $('#pPuesto2').value = p ? p.puesto2 || '' : '';
     STATS.forEach(([k]) => { $('#s_' + k).value = p ? p[k] : 60; });
+    $$('.tag-input').forEach((inp, i) => { inp.value = (p && p.etiquetas && p.etiquetas[i]) || ''; });
     renderPhoto();
     $('#playerDialog').showModal();
   }
@@ -221,6 +225,7 @@
   async function savePlayer() {
     const p = { id: state.editId || undefined, nombre: $('#pNombre').value.trim(), puesto1: $('#pPuesto1').value, puesto2: $('#pPuesto2').value, foto: state.foto };
     if (p.puesto2 === p.puesto1) p.puesto2 = '';
+    p.etiquetas = [...new Set($$('.tag-input').map(i => i.value.trim()).filter(Boolean))].slice(0, 4);
     STATS.forEach(([k]) => { p[k] = clamp(parseInt($('#s_' + k).value, 10) || 1, 1, 99); });
     const antes = state.editId ? playerById(state.editId) : null;
     await guard(async () => {
