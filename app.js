@@ -7,7 +7,8 @@
   // ---------- Modelo ----------
   const POS = { ARQ: 'Arquero', DEF: 'Defensor', DEL: 'Delantero' };
   const STATS = [['velocidad', 'Velocidad', 'VEL'], ['fisico', 'Físico', 'FIS'], ['pase', 'Pase', 'PAS'], ['tiro', 'Tiro', 'TIR'],
-                 ['defensa', 'Defensa', 'DEF'], ['regate', 'Regate', 'REG'], ['arquero', 'Arquero', 'ARQ']];
+                 ['defensa', 'Defensa', 'DEF'], ['regate', 'Regate', 'REG'], ['arquero', 'Arquero', 'ARQ'], ['agresividad', 'Agresividad', 'AGR']];
+  const STAT_DEF = 50; // valor que se asume en jugadores cargados antes de que existiera una estadística
   // Peso de cada estadística según el puesto en que juega
   const PESOS = {
     ARQ: { arquero: .60, fisico: .15, pase: .15, velocidad: .10 },
@@ -47,12 +48,20 @@
     return best;
   }
 
-  function generate(players) {
+  const agr = p => Number(p.agresividad ?? STAT_DEF);
+  // Los dos jugadores más agresivos entre los presentes
+  const masAgresivos = players => [...players].sort((a, b) => agr(b) - agr(a) || a.nombre.localeCompare(b.nombre)).slice(0, 2); // empate: orden alfabético
+
+  // criterio: '' (solo paridad), 'sep' (los dos más agresivos en equipos distintos) o 'jun' (en el mismo equipo)
+  function generate(players, criterio) {
     const n = players.length, splits = [];
+    const [ia, ib] = masAgresivos(players).map(p => players.indexOf(p));
     for (let mask = 0; mask < (1 << n); mask++) {
       if (!(mask & 1)) continue; // el primer jugador siempre en el equipo A: evita duplicados espejo
       let bits = 0; for (let i = 0; i < n; i++) if (mask & (1 << i)) bits++;
       if (bits !== n / 2) continue;
+      const juntos = ((mask >> ia) & 1) === ((mask >> ib) & 1);
+      if ((criterio === 'sep' && juntos) || (criterio === 'jun' && !juntos)) continue;
       const A = players.filter((_, i) => mask & (1 << i)), B = players.filter((_, i) => !(mask & (1 << i)));
       const la = bestLineup(A), lb = bestLineup(B);
       const cost = Math.abs(la.total - lb.total)
@@ -119,7 +128,7 @@
     if (antes.nombre !== despues.nombre) out.push(`nombre: ${antes.nombre} → ${despues.nombre}`);
     if (antes.puesto1 !== despues.puesto1) out.push(`puesto principal: ${antes.puesto1} → ${despues.puesto1}`);
     if ((antes.puesto2 || '') !== (despues.puesto2 || '')) out.push(`segundo puesto: ${antes.puesto2 || 'ninguno'} → ${despues.puesto2 || 'ninguno'}`);
-    STATS.forEach(([k, n]) => { if (Number(antes[k]) !== Number(despues[k])) out.push(`${n.toLowerCase()}: ${antes[k]} → ${despues[k]}`); });
+    STATS.forEach(([k, n]) => { if (Number(antes[k] ?? STAT_DEF) !== Number(despues[k])) out.push(`${n.toLowerCase()}: ${antes[k] ?? STAT_DEF} → ${despues[k]}`); });
     const et = a => (a.etiquetas || []).join(', ') || 'ninguna';
     if (et(antes) !== et(despues)) out.push(`etiquetas: ${et(antes)} → ${et(despues)}`);
     if ((antes.foto || '') !== (despues.foto || '')) out.push(despues.foto ? 'foto cambiada' : 'foto quitada');
@@ -159,7 +168,7 @@
           <div class="ovr">${overall(p)}</div>
         </div>
         ${(p.etiquetas || []).length ? `<div class="tags">${p.etiquetas.map(t => `<span class="tag-pill">${esc(t)}</span>`).join('')}</div>` : ''}
-        <div class="stats">${STATS.map(([k, , ab]) => `<div>${ab}<b>${p[k]}</b></div>`).join('')}</div>`;
+        <div class="stats">${STATS.map(([k, , ab]) => `<div>${ab}<b>${p[k] ?? STAT_DEF}</b></div>`).join('')}</div>`;
 
   // Ficha flotante al pasar el mouse por un jugador en Armar partido
   function bindHover(container) {
@@ -201,7 +210,7 @@
     $('#pNombre').value = p ? p.nombre : '';
     $('#pPuesto1').value = p ? p.puesto1 : 'DEF';
     $('#pPuesto2').value = p ? p.puesto2 || '' : '';
-    STATS.forEach(([k]) => { $('#s_' + k).value = p ? p[k] : 60; });
+    STATS.forEach(([k]) => { $('#s_' + k).value = p ? (p[k] ?? STAT_DEF) : 60; });
     $$('.tag-input').forEach((inp, i) => { inp.value = (p && p.etiquetas && p.etiquetas[i]) || ''; });
     renderPhoto();
     $('#playerDialog').showModal();
@@ -290,6 +299,7 @@
     const armado = !!state.match;
     $$('#selectGrid [data-sel]').forEach(c => { c.disabled = armado; });
     $('#selAllBtn').disabled = $('#selNoneBtn').disabled = armado;
+    $$('#criterio input').forEach(c => { c.disabled = armado; if (armado) c.checked = c.value === (state.match.criterio || ''); });
     updateCount();
   }
 
@@ -311,6 +321,10 @@
         <span>ARQ ${line('ARQ')}</span><span>DEF ${line('DEF')}</span><span>DEL ${line('DEL')}</span><span>${tk.length} jugadores</span></div>`;
     }).join('');
 
+    const top = (state.match.agresivos || []).map(playerById).filter(Boolean);
+    const crit = state.match.criterio;
+    $('#criterioNota').textContent = crit && top.length === 2
+      ? `Armado con los más agresivos ${crit === 'sep' ? 'separados' : 'juntos'}: ${top[0].nombre} (${agr(top[0])}) y ${top[1].nombre} (${agr(top[1])}).` : '';
     const pitch = $('#pitch');
     $$('.tok', pitch).forEach(e => e.remove());
     tokens.forEach(t => {
@@ -359,7 +373,7 @@
     const existe = state.matches.find(m => m.id === fecha);
     const pregunta = existe && state.match.id !== fecha ? `Ya hay un partido guardado para el ${fmtFecha(fecha)}. ¿Estás seguro de reemplazarlo?` : '¿Estás seguro de guardar?';
     if (!await ask(pregunta)) return;
-    const m = { id: fecha, fecha, presentes: [...state.selected], opciones: state.match.opciones, elegida: state.opt, actualizado: new Date().toISOString() };
+    const m = { id: fecha, fecha, presentes: [...state.selected], opciones: state.match.opciones, criterio: state.match.criterio || '', agresivos: state.match.agresivos || [], elegida: state.opt, actualizado: new Date().toISOString() };
     await guard(async () => { await DB.save('partidos', m); state.match.id = fecha; await reload(); toast('Partido guardado'); });
   }
 
@@ -447,9 +461,12 @@
       if (list.length > 10) toast('Hay más de 10 jugadores: se seleccionaron los primeros 10');
       renderSelect();
     };
+    $('#criterio').onchange = e => { if (e.target.checked) $$('#criterio input').forEach(c => { if (c !== e.target) c.checked = false; }); };
     $('#selNoneBtn').onclick = () => { state.selected.clear(); renderSelect(); };
     $('#generateBtn').onclick = () => {
-      state.match = { id: null, opciones: generate([...state.selected].map(playerById)) };
+      const criterio = ($('#criterio input:checked') || {}).value || '';
+      const presentes = [...state.selected].map(playerById);
+      state.match = { id: null, criterio, agresivos: masAgresivos(presentes).map(p => p.id), opciones: generate(presentes, criterio) };
       state.opt = 0; renderField();
       $('#fieldWrap').scrollIntoView({ behavior: 'smooth' });
     };
@@ -458,6 +475,7 @@
     $('#clearMatchBtn').onclick = async () => {
       if (!await ask('¿Borrar los equipos armados y arrancar de cero?')) return;
       state.match = null; state.opt = 0; state.selected.clear(); state.fechaTocada = false;
+      $$('#criterio input').forEach(c => { c.checked = false; });
       $('#fecha').value = nextDay();
       renderSelect(); renderField();
     };

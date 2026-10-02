@@ -4,12 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Fútbol de los viernes</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div id="login" class="login hidden">
   <form id="loginForm" class="card">
-    <h1>⚽ Fútbol de los viernes</h1>
+    <img src="logo.png" alt="" class="login-logo">
+    <h1>Fútbol de los viernes</h1>
     <label>Email <input type="email" id="loginEmail" required autocomplete="username"></label>
     <label>Contraseña
       <span class="pass-wrap">
@@ -29,7 +32,7 @@
 <div id="app" class="hidden">
   <header>
     <div class="brand">
-      <h1>⚽ Fútbol de los viernes</h1>
+      <h1><img src="logo.png" alt="" class="head-logo">Fútbol de los viernes</h1>
       <div id="headInfo" class="head-info"></div>
     </div>
     <nav>
@@ -70,6 +73,11 @@
         </div>
       </div>
       <div id="selectGrid" class="select-grid"></div>
+      <fieldset id="criterio" class="criterio">
+        <legend>Armar teniendo en cuenta...</legend>
+        <label><input type="checkbox" name="criterio" value="sep"> Los más agresivos separados</label>
+        <label><input type="checkbox" name="criterio" value="jun"> Los más agresivos juntos</label>
+      </fieldset>
       <div class="bar">
         <strong id="selCount">0 / 10 seleccionados</strong>
         <button id="generateBtn" class="btn primary" disabled>Armar equipos</button>
@@ -84,6 +92,7 @@
           <button id="saveMatchBtn" class="btn primary">Guardar partido</button>
         </div>
         <div id="summary" class="summary"></div>
+        <p id="criterioNota" class="muted criterio-nota"></p>
         <div class="pitch-row">
           <div id="pitch" class="pitch">
             <div class="line mid"></div><div class="circle"></div>
