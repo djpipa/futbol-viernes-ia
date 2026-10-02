@@ -129,3 +129,10 @@ dialog.ask p { margin:0 0 6px; font-size:1.05rem; }
   .stats-inputs { grid-template-columns:repeat(3,1fr); }
   input, select { font-size:16px; } /* evita el zoom automático del celular al tocar un campo */
 }
+.pass-wrap { position:relative; display:block; }
+.pass-wrap input { padding-right:44px; }
+.pass-eye { position:absolute; right:2px; top:50%; transform:translateY(-50%); width:40px; height:36px; display:grid; place-items:center; background:none; border:0; color:var(--muted); cursor:pointer; border-radius:6px; }
+.pass-eye:hover { color:var(--text); }
+.pass-eye .slash { display:none; }
+.pass-eye[aria-pressed="true"] { color:var(--accent); }
+.pass-eye[aria-pressed="true"] .slash { display:inline; }

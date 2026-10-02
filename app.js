@@ -466,7 +466,13 @@
       try { await DB.login($('#loginEmail').value, $('#loginPass').value); }
       catch { $('#loginError').textContent = 'Email o contraseña incorrectos.'; }
     };
-    $('#logoutBtn').onclick = () => DB.logout();
+    $('#passToggle').onclick = () => {
+      const inp = $('#loginPass'), ver = inp.type === 'password';
+      inp.type = ver ? 'text' : 'password';
+      const txt = ver ? 'Ocultar contraseña' : 'Mostrar contraseña';
+      Object.assign($('#passToggle'), { title: txt, ariaLabel: txt, ariaPressed: String(ver) });
+    };
+    $('#logoutBtn').onclick = () => { $('#loginPass').value = ''; $('#loginPass').type = 'password'; $('#passToggle').ariaPressed = 'false'; DB.logout(); };
   }
 
   async function start() {

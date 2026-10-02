@@ -11,7 +11,16 @@
   <form id="loginForm" class="card">
     <h1>⚽ Fútbol de los viernes</h1>
     <label>Email <input type="email" id="loginEmail" required autocomplete="username"></label>
-    <label>Contraseña <input type="password" id="loginPass" required autocomplete="current-password"></label>
+    <label>Contraseña
+      <span class="pass-wrap">
+        <input type="password" id="loginPass" required autocomplete="current-password">
+        <button type="button" id="passToggle" class="pass-eye" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M1.5 12S5.5 4.5 12 4.5 22.5 12 22.5 12 18.5 19.5 12 19.5 1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/><line class="slash" x1="3" y1="21" x2="21" y2="3"/>
+          </svg>
+        </button>
+      </span>
+    </label>
     <p id="loginError" class="error"></p>
     <button class="btn primary">Ingresar</button>
   </form>
