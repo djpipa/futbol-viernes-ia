@@ -190,3 +190,12 @@ dialog.ask p { margin:0 0 6px; font-size:1.05rem; }
 .ptable td { padding:7px 8px; }
 .ptable .tag-pill { font-size:.68rem; padding:4px 8px; }
 .ptable td.who .avatar { width:30px; height:30px; margin-right:8px; }
+/* Fichas: mismo tamaño de letra que el listado */
+.pcard { font-size:.84rem; }
+.pcard h3 { font-size:.95rem; }
+.pcard .muted { font-size:.84rem; }
+.pcard .ovr { font-size:1.35rem; }
+.pcard .stats { font-size:.72rem; }
+.pcard .stats b { font-size:.86rem; }
+.pcard .tag-pill { font-size:.68rem; padding:4px 8px; }
+.pcard .btn.small { font-size:.8rem; }
