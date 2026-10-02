@@ -91,7 +91,7 @@
   // ---------- Estado ----------
   const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
   const state = { players: [], matches: [], audit: [], config: { sede: '', dia: 5, hora: '' }, user: '', fechaTocada: false,
-                  selected: new Set(), match: null, opt: 0, editId: null, foto: '' };
+                  view: 'fichas', sort: { key: 'nombre', dir: 1 }, selected: new Set(), match: null, opt: 0, editId: null, foto: '' };
   const playerById = id => state.players.find(p => p.id === id);
 
   let toastTimer;
@@ -194,6 +194,28 @@
     container.addEventListener('mouseleave', () => card.classList.add('hidden'));
   }
 
+  // Vista de listado: una fila por jugador, con columnas ordenables
+  const COLS = [['nombre', 'Jugador', 'txt'], ['puesto1', 'PP', 'txt'], ['puesto2', 'PS', 'txt'], ['general', 'GEN', 'num'],
+                ...STATS.map(([k, n, ab]) => [k, ab, 'num', n])];
+  const valor = (p, k) => k === 'general' ? overall(p) : k === 'nombre' ? p.nombre : k.startsWith('puesto') ? (p[k] ? POS[p[k]] : '') : Number(p[k] ?? STAT_DEF);
+  function tablaHTML(list) {
+    const { key, dir } = state.sort, tipo = (COLS.find(c => c[0] === key) || [])[2];
+    const rows = [...list].sort((a, b) => {
+      const va = valor(a, key), vb = valor(b, key);
+      const c = tipo === 'num' ? va - vb : String(va).localeCompare(String(vb));
+      return (c || a.nombre.localeCompare(b.nombre)) * dir;
+    });
+    return `<div class="table-wrap"><table class="ptable"><thead><tr>${COLS.map(([k, label, t, title]) => `
+      <th class="${t}" aria-sort="${key === k ? (dir > 0 ? 'ascending' : 'descending') : 'none'}">
+        <button type="button" data-sort="${k}" title="Ordenar por ${esc(title || label)}">${label}<span class="arrow">${key === k ? (dir > 0 ? '▲' : '▼') : ''}</span></button></th>`).join('')}
+      <th>Etiquetas</th><th></th></tr></thead><tbody>${rows.map(p => `
+      <tr><td class="who">${avatar(p)}<b>${esc(p.nombre)}</b></td><td>${POS[p.puesto1]}</td><td>${p.puesto2 ? POS[p.puesto2] : '—'}</td>
+        <td class="num gen">${overall(p)}</td>${STATS.map(([k]) => `<td class="num">${p[k] ?? STAT_DEF}</td>`).join('')}
+        <td class="tags-cell">${(p.etiquetas || []).map(t => `<span class="tag-pill">${esc(t)}</span>`).join('')}</td>
+        <td class="acts"><button class="btn small" data-edit="${p.id}">Editar</button><button class="btn small danger" data-del="${p.id}">Eliminar</button></td></tr>`).join('')}
+      </tbody></table></div>`;
+  }
+
   function renderPlayers() {
     const all = [...state.players].sort((a, b) => a.nombre.localeCompare(b.nombre));
     const q = norm($('#playerSearch').value);
@@ -201,6 +223,10 @@
     $('#playersCount').textContent = q ? `(${list.length} de ${all.length})` : `(${all.length})`;
     $('#seedBtn').classList.toggle('hidden', all.length >= 10);
     $('#seedBtn').textContent = `Cargar ${10 - all.length} jugadores de prueba`;
+    const lista = state.view === 'lista';
+    $$('#viewToggle button').forEach(b => b.classList.toggle('active', b.dataset.view === state.view));
+    $('#playersGrid').classList.toggle('grid', !lista);
+    if (lista && list.length) { $('#playersGrid').innerHTML = tablaHTML(list); renderSelect(); return; }
     $('#playersGrid').innerHTML = list.length ? list.map(p => `
       <div class="pcard">${fichaHTML(p)}
         <div class="actions">
@@ -455,6 +481,12 @@
     $('#photoRemove').onclick = () => { state.foto = ''; renderPhoto(); };
 
     $('#playersGrid').onclick = e => {
+      const srt = e.target.closest('[data-sort]');
+      if (srt) { // primer click: texto A→Z y números de mayor a menor; segundo click: al revés
+        const k = srt.dataset.sort, num = (COLS.find(c => c[0] === k) || [])[2] === 'num';
+        state.sort = state.sort.key === k ? { key: k, dir: -state.sort.dir } : { key: k, dir: num ? -1 : 1 };
+        return renderPlayers();
+      }
       const ed = e.target.dataset.edit, del = e.target.dataset.del;
       if (ed) openPlayer(playerById(ed));
       if (del && confirm(`¿Eliminar a ${playerById(del).nombre}?`)) guard(async () => { const n = playerById(del).nombre; await DB.remove('jugadores', del); await audit('Baja', n); await reload(); });
@@ -483,6 +515,12 @@
     };
     $$('.opts button').forEach(b => b.onclick = () => { state.opt = Number(b.dataset.opt); renderField(); });
     $('#playerSearch').oninput = renderPlayers;
+    try { if (localStorage.getItem('futbol_vista') === 'lista') state.view = 'lista'; } catch {}
+    $('#viewToggle').onclick = e => {
+      const v = e.target.dataset.view; if (!v) return;
+      state.view = v; try { localStorage.setItem('futbol_vista', v); } catch {}
+      renderPlayers();
+    };
     $('#auditSearch').oninput = renderAudit;
     $('#histDesde').onchange = $('#histHasta').onchange = renderHistory;
     $('#histClear').onclick = () => { $('#histDesde').value = $('#histHasta').value = ''; renderHistory(); };

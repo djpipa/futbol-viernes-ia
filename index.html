@@ -57,7 +57,13 @@
           <button id="addPlayerBtn" class="btn primary">+ Nuevo jugador</button>
         </div>
       </div>
-      <input type="search" id="playerSearch" class="search" placeholder="Buscar jugador por nombre, puesto o etiqueta..." aria-label="Buscar jugador">
+      <div class="search-row players-tools">
+        <input type="search" id="playerSearch" class="search" placeholder="Buscar jugador por nombre, puesto o etiqueta..." aria-label="Buscar jugador">
+        <div id="viewToggle" class="opts" role="group" aria-label="Vista de jugadores">
+          <button type="button" data-view="fichas" class="active">Fichas</button>
+          <button type="button" data-view="lista">Listado</button>
+        </div>
+      </div>
       <div id="playersGrid" class="grid"></div>
     </section>
 
