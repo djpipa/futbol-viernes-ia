@@ -184,3 +184,9 @@ dialog.ask p { margin:0 0 6px; font-size:1.05rem; }
 .icon-btn.danger:hover { color:var(--rojo); }
 .icon-btn:focus-visible { outline:2px solid var(--accent); outline-offset:1px; }
 .ptable td.acts { width:1%; padding-left:4px; }
+/* Listado: textos un punto más chicos y celdas más ajustadas para que entre a lo ancho */
+.ptable { font-size:.84rem; }
+.ptable th button, .ptable th:not(:has(button)) { padding:9px 8px; }
+.ptable td { padding:7px 8px; }
+.ptable .tag-pill { font-size:.68rem; padding:4px 8px; }
+.ptable td.who .avatar { width:30px; height:30px; margin-right:8px; }
